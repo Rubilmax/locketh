@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
-import {Strings} from "../lib/openzeppelin-contracts/contracts/utils/Strings.sol";
+import {Strings} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 import {ERC20PermitUpgradeable} from
     "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
@@ -17,11 +17,11 @@ contract Locketh is ERC20PermitUpgradeable {
     function initialize(uint256 releaseTimestamp) external initializer {
         RELEASE_TIMESTAMP = releaseTimestamp;
 
-        __ERC20_init(
-            string.concat("Locked ETH (", releaseTimestamp.toString(), ")"),
-            string.concat("lockETH-", releaseTimestamp.toString())
-        );
-        __ERC20Permit_init("Locketh");
+        string memory _name = string.concat("Locked ETH (", releaseTimestamp.toString(), ")");
+        string memory _symbol = string.concat("lockETH-", releaseTimestamp.toString());
+
+        __ERC20_init(_name, _symbol);
+        __ERC20Permit_init(_name);
     }
 
     /* EXTERNAL */
@@ -32,13 +32,13 @@ contract Locketh is ERC20PermitUpgradeable {
         _mint(to, msg.value);
     }
 
-    function redeem(address from, uint256 value) external {
+    function redeem(address from, address payable to, uint256 value) external {
         require(block.timestamp > RELEASE_TIMESTAMP, ErrorsLib.LOCKED);
 
         address spender = _msgSender();
         _spendAllowance(from, spender, value);
         _burn(from, value);
 
-        payable(spender).transfer(value);
+        to.transfer(value);
     }
 }

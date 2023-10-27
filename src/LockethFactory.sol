@@ -6,8 +6,9 @@ import {Clones} from "../lib/openzeppelin-contracts-upgradeable/lib/openzeppelin
 import {Locketh} from "./Locketh.sol";
 
 uint256 constant SPACING = 12 hours;
+address constant ETH = address(0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee);
 
-contract Lockether {
+contract LockethFactory {
     address public immutable IMPLEMENTATION;
 
     constructor(address implementation) {
@@ -24,9 +25,8 @@ contract Lockether {
         return Clones.predictDeterministicAddress(IMPLEMENTATION, bytes32(releaseTimestamp), address(this));
     }
 
-    function mint(uint256 releaseTimestamp, address to) external payable {
+    function lock(uint256 releaseTimestamp, address to) external payable {
         address locket = locketh(releaseTimestamp);
-
         if (locket.code.length == 0) create(releaseTimestamp);
 
         Locketh(locket).mint{value: msg.value}(to);
