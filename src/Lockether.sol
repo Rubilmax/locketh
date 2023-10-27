@@ -14,13 +14,21 @@ contract Lockether {
         IMPLEMENTATION = implementation;
     }
 
-    function create(uint256 releaseTimestamp) external returns (address locket) {
+    function create(uint256 releaseTimestamp) public returns (address locket) {
         locket = Clones.cloneDeterministic(IMPLEMENTATION, bytes32(releaseTimestamp));
 
         Locketh(locket).initialize(releaseTimestamp);
     }
 
-    function locketh(uint256 releaseTimestamp) external view returns (address) {
+    function locketh(uint256 releaseTimestamp) public view returns (address) {
         return Clones.predictDeterministicAddress(IMPLEMENTATION, bytes32(releaseTimestamp), address(this));
+    }
+
+    function mint(uint256 releaseTimestamp, address to) external payable {
+        address locket = locketh(releaseTimestamp);
+
+        if (locket.code.length == 0) create(releaseTimestamp);
+
+        Locketh(locket).mint{value: msg.value}(to);
     }
 }
